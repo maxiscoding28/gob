@@ -1,8 +1,7 @@
-# tx.py
 import click
 import os
 import shutil
-from .utils import get_customer_dir, create_directory, remove_directory, list_directories, open_directory
+from .utils import get_customer_dir, create_directory, remove_directory, list_directories, open_directory, get_gob_dir
 
 @click.group()
 def tx():
@@ -13,23 +12,30 @@ def tx():
 @click.argument('ticket_id')
 def add_ticket(customer_name, ticket_id):
     """Add a new ticket."""
+    click.echo("Running gob tx add...")
     customer_dir = get_customer_dir(customer_name)
     if not os.path.exists(customer_dir):
         click.secho(f'🔴 Error: Customer directory {customer_name} does not exist.', fg='red')
         return
-    ticket_dir = os.path.join(customer_dir, 'tickets')
-    if create_directory(ticket_dir):
-        ticket_path = os.path.join(ticket_dir, ticket_id)
-        if create_directory(ticket_path):
-            click.secho(f'🟢 Ticket {ticket_id} created for customer {customer_name}.', fg='green')
-        else:
-            click.secho(f'🔴 Ticket {ticket_id} already exists for customer {customer_name}.', fg='red')
+    ticket_path = os.path.join(customer_dir, 'tickets', ticket_id)
+    if create_directory(ticket_path):
+        # Create notes.sh and notes.md files within the ticket directory
+        notes_sh_path = os.path.join(ticket_path, 'notes.sh')
+        notes_md_path = os.path.join(ticket_path, 'notes.md')
+        with open(notes_sh_path, 'w') as notes_sh_file:
+            notes_sh_file.write('#!/bin/bash\n\n# Notes for ticket\n')
+        with open(notes_md_path, 'w') as notes_md_file:
+            notes_md_file.write('# Notes\n\n')
+        click.secho(f'🟢 Ticket {ticket_id} created for customer {customer_name}.', fg='green')
+    else:
+        click.secho(f'🔴 Ticket {ticket_id} already exists for customer {customer_name}.', fg='red')
 
 @tx.command('solve')
 @click.option('-c', '--customer_name', required=True, help='Name of the customer')
 @click.argument('ticket_id')
 def solve_ticket(customer_name, ticket_id):
     """Mark a ticket as solved."""
+    click.echo("Running gob tx solve...")
     customer_dir = get_customer_dir(customer_name)
     ticket_dir = os.path.join(customer_dir, 'tickets')
     ticket_path = os.path.join(ticket_dir, ticket_id)
@@ -49,6 +55,7 @@ def solve_ticket(customer_name, ticket_id):
 @click.argument('ticket_id')
 def reopen_ticket(customer_name, ticket_id):
     """Reopen a solved ticket."""
+    click.echo("Running gob tx reopen...")
     customer_dir = get_customer_dir(customer_name)
     solved_dir = os.path.join(get_gob_dir(), '.solved')
     ticket_path = os.path.join(solved_dir, ticket_id)
@@ -66,6 +73,7 @@ def reopen_ticket(customer_name, ticket_id):
 @click.argument('ticket_id')
 def remove_ticket(customer_name, solved, ticket_id):
     """Remove a ticket."""
+    click.echo("Running gob tx rm...")
     gob_dir = get_gob_dir()
     if solved:
         solved_dir = os.path.join(gob_dir, '.solved')
@@ -99,6 +107,7 @@ def remove_ticket(customer_name, solved, ticket_id):
 @click.option('-s', '--solved', is_flag=True, help='List solved tickets')
 def list_tickets(customer_name, solved):
     """List all tickets for a customer."""
+    click.echo("Running gob tx ls...")
     gob_dir = get_gob_dir()
     if solved:
         solved_dir = os.path.join(gob_dir, '.solved')
@@ -128,6 +137,7 @@ def list_tickets(customer_name, solved):
 @click.argument('ticket_id')
 def open_ticket(customer_name, ticket_id):
     """Open a ticket directory with the default editor or 'open' command."""
+    click.echo("Running gob tx open...")
     customer_dir = get_customer_dir(customer_name)
     ticket_dir = os.path.join(customer_dir, 'tickets')
     ticket_path = os.path.join(ticket_dir, ticket_id)
@@ -142,6 +152,7 @@ def open_ticket(customer_name, ticket_id):
 @click.argument('ticket_id')
 def move_to_ticket(customer_name, path, ticket_id):
     """Move a file or directory to a ticket directory."""
+    click.echo("Running gob tx mv...")
     customer_dir = get_customer_dir(customer_name)
     ticket_dir = os.path.join(customer_dir, 'tickets')
     ticket_path = os.path.join(ticket_dir, ticket_id)
