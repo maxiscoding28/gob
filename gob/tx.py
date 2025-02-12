@@ -5,6 +5,7 @@ from .utils import get_customer_dir, create_directory, remove_directory, list_di
 
 @click.group()
 def tx():
+    """Manage tickets."""
     pass
 
 @tx.command('add')

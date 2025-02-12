@@ -5,6 +5,7 @@ import os
 
 @click.group()
 def cx():
+    """Manage customers."""
     pass
 
 @cx.command('add')
